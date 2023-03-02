@@ -1,27 +1,42 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
+use std::fs::File;
+use std::io::{BufReader, BufWriter};
+use std::path::Path;
 
-#[derive(Serialize, Deserialize)]
+// Define a struct to represent your data
+#[derive(Debug, Deserialize, Serialize)]
 struct Person {
     name: String,
     age: u8,
-    address: String,
+    email: String,
 }
 
-fn main() -> Result<()> {
-    let json_string = r#"
-        {
-            "name": "John Doe",
-            "age": 30,
-            "address": "123 Main St."
-        }
-    "#;
+fn main() {
+    let data = vec![
+        Person {
+            name: String::from("Alice"),
+            age: 25,
+            email: String::from("alice@example.com"),
+        },
+        Person {
+            name: String::from("Bob"),
+            age: 30,
+            email: String::from("bob@example.com"),
+        },
+    ];
 
-    let person: Person = serde_json::from_str(json_string)?;
+    let path = Path::new("data.json");
 
-    println!("Name: {}", person.name);
-    println!("Age: {}", person.age);
-    println!("Address: {}", person.address);
+    // Write data to JSON file
+    let file = File::create(&path).expect("Could not create file");
+    let writer = BufWriter::new(file);
+    serde_json::to_writer_pretty(writer, &data).expect("Could not write to file");
 
-    Ok(())
+    // Read data from JSON file
+    let file = File::open(&path).expect("Could not open file");
+    let reader = BufReader::new(file);
+    let loaded_data: Vec<Person> =
+        serde_json::from_reader(reader).expect("Could not read from file");
+
+    println!("{:#?}", loaded_data);
 }
